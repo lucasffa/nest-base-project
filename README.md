@@ -4,7 +4,7 @@
 
 ## Overview
 
-The "nest-base-project" is a NestJS-based backend application designed to demonstrate robust API development practices. Leveraging the powerful features of NestJS, this project showcases a fully functional user management system with authentication, role-based access control, and CRUD operations on user data.
+This "nest-base-project" is a NestJS-based backend application designed to demonstrate robust API development practices. Leveraging the powerful features of NestJS, this project showcases a fully functional user management system with authentication, role-based access control, and CRUD operations on user data.
 
 ## Features
 
