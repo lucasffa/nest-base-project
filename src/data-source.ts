@@ -1,6 +1,5 @@
-// src/data-source.ts
 import { DataSource } from 'typeorm';
-import { User } from './user/user.entity'; // Adjust the path to your User entity
+import { User } from './user/user.entity';
 
 export const AppDataSource = new DataSource({
     type: process.env.DB_TYPE as any,

@@ -9,4 +9,3 @@ export enum Permission {
     DELETE_ONE_USER = 'delete:one_user',
     DELETE_OWN_USER = 'delete:own_user',
   }
-  

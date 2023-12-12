@@ -1,13 +1,16 @@
-import { Controller, Get, Post, Put, Delete, Patch, Body, Param, Query, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Patch, Body, Param, Query, UseGuards, Req, ValidationPipe, UsePipes } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './user.entity';
 import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
 import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Permissions } from '../auth/decorators/permissions.decorator';
 import { RouteRequirements, RouteRequirementDetails } from '../auth/enums/routes.enum';
+import { UpdateByUuidResponseDto, LoginUserResponseDto, SoftDeleteByUuidResponseDto, ChangeActivationStatusByUuidResponseDto, ReadAllUsersResponseDto, FindOneByEmailResponseDto, FindOneByUuidResponseDto, FindOneResponseDto, CreateUserResponseDto, UpdateUserResponseDto, SoftDeleteResponseDto, ActivateUserResponseDto} from './dto/other-user-responses.dto';
+
 
 @Controller('users')
 export class UserController {
@@ -19,42 +22,52 @@ export class UserController {
   @Get()
   @UseGuards(...RouteRequirementDetails[RouteRequirements.ReadAllUsers].guards)
   @Permissions(...RouteRequirementDetails[RouteRequirements.ReadAllUsers].permissions)
-  findAll(): Promise<User[]> {
+  findAll(): Promise<ReadAllUsersResponseDto[]> {
     return this.userService.findAll();
   }
 
   @Get('email')
   @UseGuards(...RouteRequirementDetails[RouteRequirements.FindOneByEmail].guards)
   @Roles(...RouteRequirementDetails[RouteRequirements.FindOneByEmail].roles)
-  findOneByEmail(@Query('email') email: string): Promise<User> {
+  findOneByEmail(@Query('email') email: string): Promise<FindOneByEmailResponseDto> {
     return this.userService.findOneByEmail(email);
   }
 
   @Get('uuid')
   @UseGuards(...RouteRequirementDetails[RouteRequirements.FindOneByUuid].guards)
   @Permissions(...RouteRequirementDetails[RouteRequirements.FindOneByUuid].permissions)
-  findOneByUuid(@Query('uuid') uuid: string, @Req() req): Promise<User> {
+  findOneByUuid(@Query('uuid') uuid: string, @Req() req): Promise<FindOneByUuidResponseDto> {
     const userRequesting = req.user;
-    return this.userService.findOneByUuid(uuid, req.requesterUuid, req.requesterRole);
+    return this.userService.findOneByUuid(uuid, userRequesting.uuid, userRequesting.role);
   }
 
   @Get(':id')
   @UseGuards(...RouteRequirementDetails[RouteRequirements.FindOne].guards)
   @Roles(...RouteRequirementDetails[RouteRequirements.FindOne].roles)
-  findOne(@Param('id') id: number): Promise<User> {
+  findOne(@Param('id') id: number): Promise<FindOneResponseDto> {
     return this.userService.findOne(id);
   }
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto): Promise<User> {
+  create(@Body() createUserDto: CreateUserDto): Promise<CreateUserResponseDto> {
     return this.userService.create(createUserDto);
+  }
+
+  @Put('uuid')
+  @UseGuards(...RouteRequirementDetails[RouteRequirements.UpdateByUuid].guards)
+  @Permissions(...RouteRequirementDetails[RouteRequirements.UpdateByUuid].permissions)
+  @UsePipes(new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }))
+  updateByUuid(@Query('uuid') uuid: string, @Body() updateUserDto: UpdateUserDto, @Req() req): Promise<UpdateByUuidResponseDto> {
+    const userRequesting = req.user;
+    return this.userService.updateByUuid(uuid, updateUserDto, userRequesting.uuid, userRequesting.role);
   }
 
   @Put(':id')
   @UseGuards(...RouteRequirementDetails[RouteRequirements.UpdateUser].guards)
   @Permissions(...RouteRequirementDetails[RouteRequirements.UpdateUser].permissions)
-  update(@Param('id') id: number, @Body() user: Partial<User>): Promise<User> {
-    return this.userService.update(id, user);
+  @UsePipes(new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }))
+  update(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto): Promise<UpdateUserResponseDto> {
+    return this.userService.update(id, updateUserDto);
   }
 
   @Delete('delete')
@@ -68,7 +81,7 @@ export class UserController {
   @Patch('activate')
   @UseGuards(...RouteRequirementDetails[RouteRequirements.ChangeActivationStatusByUuid].guards)
   @Permissions(...RouteRequirementDetails[RouteRequirements.ChangeActivationStatusByUuid].permissions)
-  changeActivationStatusByUuid(@Query('uuid') uuid: string, @Req() req): Promise<User> {
+  changeActivationStatusByUuid(@Query('uuid') uuid: string, @Req() req): Promise<ChangeActivationStatusByUuidResponseDto> {
     const userRequesting = req.user; 
     return this.userService.changeActivationStatusByUuid(uuid, userRequesting.uuid, userRequesting.role);
   }
@@ -83,12 +96,12 @@ export class UserController {
   @Patch(':id/activate')
   @UseGuards(...RouteRequirementDetails[RouteRequirements.ActivateUser].guards)
   @Roles(...RouteRequirementDetails[RouteRequirements.ActivateUser].roles)
-  changeActivationStatus(@Param('id') id: number, @Body() isActive: boolean): Promise<User> {
+  changeActivationStatus(@Param('id') id: number, @Body() isActive: boolean): Promise<ActivateUserResponseDto> {
     return this.userService.changeActivationStatus(id);
   }
 
   @Post('login')
-  async login(@Body() loginDto: LoginDto) {
+  async login(@Body() loginDto: LoginDto): Promise<any> {
     const user = await this.userService.validateUser(loginDto.email, loginDto.password);
     if (!user) {
       throw new UnauthorizedException();

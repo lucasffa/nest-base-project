@@ -2,21 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Role } from '../auth/enums/roles.enum';
 
-
 @Entity()
 export class User {
-  // User entity with the following fields:
-  // id: number
-  // uuid: string
-  // name: string
-  // email: string
-  // password: string
-  // createdAt: Date
-  // updatedAt: Date
-  // lastLogin: Date
-  // isActive: boolean
-  // isDeleted: boolean
-  // deletedAt: Date
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -32,17 +19,13 @@ export class User {
   @Column()
   password: string;
 
-  // Method to set the password (encrypting it)
   setPassword(password: string) {
-    console.log('password in setPassword: ', password);
     const saltRounds = 10;
     const salt = bcrypt.genSaltSync(saltRounds);
     this.password = bcrypt.hashSync(password, salt);
   }
 
-  // Method to validate a password
   async validatePassword(password: string): Promise<boolean> {
-    console.log('password in validatePassword: ', password);
     return bcrypt.compare(password, this.password);
   }
 
@@ -60,7 +43,7 @@ export class User {
   updatedAt: Date;
 
   @Column({type: 'timestamp', nullable: true})
-  lastLogin: Date;
+  lastLoginAt: Date;
 
   @Column()
   isActive: boolean;

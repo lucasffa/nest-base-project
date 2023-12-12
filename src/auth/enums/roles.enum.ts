@@ -1,6 +1,5 @@
 import { Permission } from './permissions.enum';
 
-
 export enum Role {
     User = 'user',
     Helper = 'helper',

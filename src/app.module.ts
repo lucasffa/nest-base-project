@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { CacheModule } from '@nestjs/cache-manager';
 import { AppController } from './app.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppService } from './app.service';
@@ -26,6 +27,10 @@ import { PermissionsGuard } from './auth/guards/permissions.guard';
     }),
     UserModule,
     AuthModule,
+    CacheModule.register({
+        ttl: 60 * 1000,
+        isGlobal: true,
+    }),
   ],
   controllers: [AppController],
   providers: [

@@ -17,7 +17,6 @@ export class PermissionChecker {
   canPerformAction(requesterUuid: string, targetUuid: string, requesterRole: Role, ...requiredPermissions: Permission[]): boolean {
     const canPerformOnAny = this.hasPermission(requesterRole, Permission.READ_ALL_USERS, Permission.UPDATE_ONE_USER, Permission.TOGGLE_ONE_USER_STATUS, Permission.DELETE_ONE_USER);
     const canPerformOnOwn = this.hasPermission(requesterRole, ...requiredPermissions) && requesterUuid === targetUuid;
-
     return canPerformOnAny || canPerformOnOwn;
   }
 }
