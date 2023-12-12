@@ -8,5 +8,4 @@ export class UpdateUserDto {
   @IsOptional()
   @IsEmail()
   email?: string;
-
 }
