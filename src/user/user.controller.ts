@@ -1,17 +1,13 @@
-import { Controller, Get, Post, Put, Delete, Patch, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Patch, Body, Param, Query, UseGuards, Req } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from './user.entity';
 import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
 import { CreateUserDto } from './dto/create-user.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
-import { Role } from '../auth/roles.enum';
 import { Permissions } from '../auth/decorators/permissions.decorator';
-import { Permission } from '../auth/permissions.enum';
-import { PermissionsGuard } from 'src/auth/guards/permissions.guard';
+import { RouteRequirements, RouteRequirementDetails } from '../auth/enums/routes.enum';
 
 @Controller('users')
 export class UserController {
@@ -21,23 +17,30 @@ export class UserController {
     ) {}
 
   @Get()
-  @Permissions(Permission.READ_ALL_USERS)
-  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @UseGuards(...RouteRequirementDetails[RouteRequirements.ReadAllUsers].guards)
+  @Permissions(...RouteRequirementDetails[RouteRequirements.ReadAllUsers].permissions)
   findAll(): Promise<User[]> {
     return this.userService.findAll();
   }
 
   @Get('email')
+  @UseGuards(...RouteRequirementDetails[RouteRequirements.FindOneByEmail].guards)
+  @Roles(...RouteRequirementDetails[RouteRequirements.FindOneByEmail].roles)
   findOneByEmail(@Query('email') email: string): Promise<User> {
     return this.userService.findOneByEmail(email);
   }
 
   @Get('uuid')
-  findOneByUuid(@Query('uuid') uuid: string): Promise<User> {
-    return this.userService.findOneByUuid(uuid);
+  @UseGuards(...RouteRequirementDetails[RouteRequirements.FindOneByUuid].guards)
+  @Permissions(...RouteRequirementDetails[RouteRequirements.FindOneByUuid].permissions)
+  findOneByUuid(@Query('uuid') uuid: string, @Req() req): Promise<User> {
+    const userRequesting = req.user;
+    return this.userService.findOneByUuid(uuid, req.requesterUuid, req.requesterRole);
   }
 
   @Get(':id')
+  @UseGuards(...RouteRequirementDetails[RouteRequirements.FindOne].guards)
+  @Roles(...RouteRequirementDetails[RouteRequirements.FindOne].roles)
   findOne(@Param('id') id: number): Promise<User> {
     return this.userService.findOne(id);
   }
@@ -48,42 +51,51 @@ export class UserController {
   }
 
   @Put(':id')
+  @UseGuards(...RouteRequirementDetails[RouteRequirements.UpdateUser].guards)
+  @Permissions(...RouteRequirementDetails[RouteRequirements.UpdateUser].permissions)
   update(@Param('id') id: number, @Body() user: Partial<User>): Promise<User> {
     return this.userService.update(id, user);
   }
 
   @Delete('delete')
-  softDeleteByUuid(@Query('uuid') uuid: string): Promise<void> {
-    return this.userService.softDeleteByUuid(uuid);
+  @UseGuards(...RouteRequirementDetails[RouteRequirements.SoftDeleteByUuid].guards)
+  @Roles(...RouteRequirementDetails[RouteRequirements.SoftDeleteByUuid].roles)
+  softDeleteByUuid(@Query('uuid') uuid: string, @Req() req): Promise<void> {
+    const userRequesting = req.user;
+    return this.userService.softDeleteByUuid(uuid, userRequesting.uuid, userRequesting.role);
   }
 
   @Patch('activate')
-  changeActivationStatusByUuid(@Query('uuid') uuid: string): Promise<User> {
-    return this.userService.changeActivationStatusByUuid(uuid);
+  @UseGuards(...RouteRequirementDetails[RouteRequirements.ChangeActivationStatusByUuid].guards)
+  @Permissions(...RouteRequirementDetails[RouteRequirements.ChangeActivationStatusByUuid].permissions)
+  changeActivationStatusByUuid(@Query('uuid') uuid: string, @Req() req): Promise<User> {
+    const userRequesting = req.user; 
+    return this.userService.changeActivationStatusByUuid(uuid, userRequesting.uuid, userRequesting.role);
   }
 
   @Delete(':id/delete')
+  @UseGuards(...RouteRequirementDetails[RouteRequirements.SoftDelete].guards)
+  @Roles(...RouteRequirementDetails[RouteRequirements.SoftDelete].roles)
   softDelete(@Param('id') id: number): Promise<void> {
     return this.userService.softDelete(id);
   }
 
   @Patch(':id/activate')
+  @UseGuards(...RouteRequirementDetails[RouteRequirements.ActivateUser].guards)
+  @Roles(...RouteRequirementDetails[RouteRequirements.ActivateUser].roles)
   changeActivationStatus(@Param('id') id: number, @Body() isActive: boolean): Promise<User> {
     return this.userService.changeActivationStatus(id);
   }
 
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
-    
-    console.log('JWT Secret in user.controller.login:', process.env.JWT_SECRET);
     const user = await this.userService.validateUser(loginDto.email, loginDto.password);
     if (!user) {
       throw new UnauthorizedException();
     }
 
-    const payload = { email: user.email, sub: user.id, role: user.role };
+    const payload = { email: user.email, sub: user.uuid, role: user.role };
     const token = this.jwtService.sign(payload, { secret: process.env.JWT_SECRET });
-    
 
     return {
       message: 'Login successful',

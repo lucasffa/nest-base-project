@@ -4,12 +4,17 @@ import { Repository } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { v4 as uuidv4 } from 'uuid';
+import { Role } from '../auth/enums/roles.enum';
+import { PermissionChecker } from '../helpers/permission-checker';
+import { RouteRequirements, RouteRequirementDetails } from '../auth/enums/routes.enum';
 
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+
+    private permissionChecker: PermissionChecker,
   ) {}
 
   // If User is deleted, it will not be returned by this method
@@ -99,7 +104,13 @@ export class UserService {
     }
   }
 
-  async softDeleteByUuid(uuid: string): Promise<void> {
+  async softDeleteByUuid(uuid: string, requesterUuid, requesterRole): Promise<void> {
+    
+    // Check if requester has permission to soft delete user
+    if (!this.permissionChecker.canPerformAction(requesterUuid, uuid, requesterRole, ...RouteRequirementDetails[RouteRequirements.SoftDeleteByUuid].permissions)) {
+      throw new UnauthorizedException('You do not have permission to soft delete this user');
+    }
+
     const result = await this.usersRepository.update({ uuid }, { 
       isActive: false,
       isDeleted: true,
@@ -111,9 +122,14 @@ export class UserService {
     }
   }
 
-  async changeActivationStatusByUuid(uuid: string): Promise<User> {
+  async changeActivationStatusByUuid(uuid: string, requesterUuid: string, requesterRole: Role): Promise<User> {
+    
+    // Check if requester has permission to toggle activation status
+    if (!this.permissionChecker.canPerformAction(requesterUuid, uuid, requesterRole, ...RouteRequirementDetails[RouteRequirements.ChangeActivationStatusByUuid].permissions)) {
+      throw new UnauthorizedException('You do not have permission to toggle this user\'s activation status');
+    }
+
     try {
-      // Find user data
       const userData = await this.usersRepository.findOne({ where: { uuid } });
       if (!userData) {
         throw new NotFoundException(`User with UUID ${uuid} not found`);
@@ -122,13 +138,12 @@ export class UserService {
       // Toggle isActive status
       userData.isActive = !userData.isActive;
 
-      // If activating a previously deleted (soft deleted) user
+      // Handling for previously deleted users
       if (userData.isActive && userData.isDeleted) {
         userData.isDeleted = false;
-        userData.deletedAt = null; // Optionally reset the deletedAt timestamp
+        userData.deletedAt = null;
       }
 
-      // Save changes
       await this.usersRepository.save(userData);
       
       return userData;
@@ -137,7 +152,13 @@ export class UserService {
     }
   }
 
-  async findOneByUuid(uuid: string): Promise<User> {
+  async findOneByUuid(uuid: string, requesterUuid, requesterRole): Promise<User> {
+        
+    // Check if requester has permission to find one user by uuid
+    if (!this.permissionChecker.canPerformAction(requesterUuid, uuid, requesterRole, ...RouteRequirementDetails[RouteRequirements.ChangeActivationStatusByUuid].permissions)) {
+      throw new UnauthorizedException('You do not have permission to try to find this user by uuid');
+    }
+
     try{    
       return this.usersRepository.findOne({where: {uuid, isDeleted: false, isActive: true}});
     }catch(error){

@@ -1,19 +1,17 @@
----
-
 # nest-base-project
 
 ## Overview
 
-This "nest-base-project" is a NestJS-based backend application designed to demonstrate robust API development practices. Leveraging the powerful features of NestJS, this project showcases a fully functional user management system with authentication, role-based access control, and CRUD operations on user data.
+This "nest-base-project" is a NestJS-based backend application designed for robust API development. It showcases advanced features like a fully functional user management system with enhanced authentication, role-based access control, and CRUD operations on user data.
 
 ## Features
 
+- **Advanced Role and Permission-Based Access Control**: Implementing a sophisticated system that provides granular control over user permissions.
 - **Full CRUD Operations on User**: Create, Read, Update, and Delete user entities.
-- **Authentication and Authorization**: Implemented using JWT tokens and role-based access control.
-- **PostgreSQL Integration**: Utilizes PostgreSQL for robust, relational data management.
-- **Role-Based Access Control**: Admin and Moderator roles with specific permissions.
-- **Password Encryption**: Secures user passwords using bcrypt.
-- **Validation and Error Handling**: Implements DTOs and custom decorators for input validation and structured error responses.
+- **Authentication and Authorization**: Using JWT tokens and role-based access control with enhanced security measures.
+- **PostgreSQL Integration**: For robust, relational data management.
+- **Password Encryption**: Using bcrypt for securing user passwords.
+- **Validation and Error Handling**: Through DTOs and custom decorators for structured error responses.
 
 ## Architecture
 
@@ -23,42 +21,47 @@ This "nest-base-project" is a NestJS-based backend application designed to demon
 src
 ├── auth
 │   ├── decorators
+│   ├── enums
 │   ├── guards
 │   ├── strategies
 │   └── ...
+├── helpers
+│   └── permission-checker.ts
 ├── user
 │   ├── dto
 │   └── ...
 └── ...
 ```
 
-- **auth**: Contains authentication logic, including JWT strategies, guards, and decorators.
-- **user**: Manages user-related operations, including controllers and services for user handling.
+- **auth**: Includes authentication logic, JWT strategies, guards, decorators, and role-based access control mechanisms.
+- **helpers**: Contains utility classes like `PermissionChecker` for managing permissions and roles.
+- **user**: Manages user-related operations with controllers and services.
 
 ### Key Components
 
-- **Controllers**: Handle incoming requests and return responses to the client.
-- **Services**: Encapsulate business logic and interact with the database.
-- **Entities**: Represent tables in the database, defining the structure of data.
-- **Modules**: Organize code into functional units.
-- **Decorators**: Extend the functionality of classes or methods, used for roles and validation.
-- **DTOs (Data Transfer Objects)**: Define the format of data for incoming requests.
+- **PermissionChecker**: A helper class for role and permission verification.
+- **Controllers**: Manage incoming requests and responses.
+- **Services**: Business logic and database interactions.
+- **Entities**: Database table representations.
+- **Modules**: Functional code organization.
+- **Decorators**: Functional extension for roles and validation.
+- **DTOs**: Data format definitions for requests.
 
 ## Technologies
 
-- **NestJS**: A progressive Node.js framework for building efficient and scalable server-side applications.
-- **TypeORM**: An ORM tool to interact with the database in an object-oriented manner.
-- **PostgreSQL**: A powerful, open-source object-relational database system.
-- **JWT**: Used for securing the authentication process.
-- **bcrypt**: A library to help hash passwords.
+- **NestJS**: A progressive Node.js framework for scalable server-side applications.
+- **TypeORM**: ORM for database interaction in an object-oriented way.
+- **PostgreSQL**: Open-source object-relational database system.
+- **JWT**: Secure authentication method.
+- **bcrypt**: Password hashing library.
 
 ## Getting Started
 
 ### Prerequisites
 
 - Node.js
-- PostgreSQL database
-- Environment variables setup (JWT_SECRET, DATABASE_URL)
+- PostgreSQL
+- Environment variables (JWT_SECRET, DATABASE_URL)
 
 ### Installation
 
@@ -69,10 +72,10 @@ src
 
 ## Usage
 
-The application exposes endpoints for user management and authentication:
+Endpoints for user management and authentication:
 
-- `/users`: Perform CRUD operations on users.
-- `/auth/login`: Authenticate users and issue JWT tokens.
+- `/users`: CRUD operations on users.
+- `/auth/login`: User authentication and JWT issuance.
 
 ### Example Requests
 
@@ -87,30 +90,24 @@ POST /users
 
 ## Security
 
-This project implements several security practices:
-
-- **JWT for Authentication**: Ensures secure transmission of user credentials.
-- **Password Hashing**: Protects user passwords using bcrypt.
-- **Role-Based Access Control**: Restricts access to certain functionalities based on user roles.
+- **JWT Authentication**: Secure user credential transmission.
+- **Password Hashing**: Using bcrypt.
+- **Advanced Role-Based Access Control**: Detailed user access management.
 
 ## Testing
 
-- Unit tests for services and controllers.
-- Integration tests for endpoints.
+- Unit and integration tests for services, controllers, and endpoints.
 
 ### Running Tests
 
-Execute `npm run test` to run the test suite.
+Execute `npm run test` for testing.
 
 ## Contributing
 
-Contributions are welcome. Please follow the standard pull request process.
+Contributions are welcome. Please adhere to the pull request process.
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
-Nest is [MIT licensed](LICENSE).
-
----
-
+- Project: [MIT License](LICENSE).
+- Nest: [MIT licensed](LICENSE).
 

@@ -1,6 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { Role } from '../auth/roles.enum';
+import { Role } from '../auth/enums/roles.enum';
 
 
 @Entity()
@@ -34,6 +34,7 @@ export class User {
 
   // Method to set the password (encrypting it)
   setPassword(password: string) {
+    console.log('password in setPassword: ', password);
     const saltRounds = 10;
     const salt = bcrypt.genSaltSync(saltRounds);
     this.password = bcrypt.hashSync(password, salt);
@@ -41,6 +42,7 @@ export class User {
 
   // Method to validate a password
   async validatePassword(password: string): Promise<boolean> {
+    console.log('password in validatePassword: ', password);
     return bcrypt.compare(password, this.password);
   }
 
