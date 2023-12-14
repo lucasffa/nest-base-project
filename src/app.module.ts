@@ -7,6 +7,7 @@ import { UserModule } from './user/user.module';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
 import { PermissionsGuard } from './auth/guards/permissions.guard';
+import { RateLimitingGuard } from './common/guards/rate-limiting.guard';
 
 
 @Module({
@@ -35,7 +36,11 @@ import { PermissionsGuard } from './auth/guards/permissions.guard';
   controllers: [AppController],
   providers: [
     AppService, 
-    PermissionsGuard
+    PermissionsGuard,
+    {
+      provide: 'APP_GUARD',
+      useClass: RateLimitingGuard,
+    }
   ],
 })
 export class AppModule {}

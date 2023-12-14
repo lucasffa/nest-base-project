@@ -24,12 +24,20 @@ The "nest-base-project" is a meticulously architected NestJS backend application
 
 9. **Validation and Transformation**: Employs 'ValidationPipe' with whitelisting in user update routes, ensuring only permissible fields are accepted, preventing unauthorized updates.
 
+10. **Dynamic Rate Limiting**: Introduces a customizable rate limiting system, allowing fine-grained control over API request frequency to prevent abuse and ensure service availability.
+
 ## Architecture and Design
 
 ### Directory Structure
 
 ```
 src
+├── common
+│   ├── constants
+│   ├── decorators
+│   │   └── rate-limit.decorator.ts
+│   └── guards
+│       └── rate-limiting.guard.ts
 ├── auth
 │   ├── decorators
 │   ├── enums
@@ -43,6 +51,8 @@ src
 │   └── ...
 └── ...
 ```
+
+- **Common**: Common: Houses shared utilities like rate limiting decorators and guards, offering cross-cutting functionalities like API throttling.
 
 - **Auth**: Central to the application's security, handling authentication, JWT strategies, guards, decorators, and access control mechanisms.
 
@@ -69,6 +79,10 @@ The project is a paragon of:
 
 - **Performance Optimization**: With implemented caching strategies, the project demonstrates an understanding of performance considerations in API development.
 
+- **Rate Limiting as a Security and Performance Feature**: Incorporates advanced rate limiting strategies using custom decorators and guards, demonstrating an acute awareness of security and resource management in API design.
+
+- **Extensibility and Reusability**: The modular design of rate limiting components, like decorators and guards, ensures easy extensibility and reusability across different parts of the application.
+
 ## Getting Started
 
 ### Installation and Setup
@@ -81,7 +95,7 @@ The project is a paragon of:
 
 ## Testing
 
-- The project includes thorough unit and integration tests, ensuring reliability and robustness of services, controllers, and endpoints.
+- The project still doesn't include thorough unit and integration tests, but aims future ensuring reliability and robustness of services, controllers, and endpoints.
 
 ### Running Tests
 
