@@ -8,10 +8,26 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
 import { PermissionsGuard } from './auth/guards/permissions.guard';
 import { RateLimitingGuard } from './common/guards/rate-limiting.guard';
-
+import { ConfigModule } from '@nestjs/config';
+import { validateSync } from 'class-validator';
+import { plainToClass } from 'class-transformer';
+import { ConfigurationSchema } from './config/configuration.schema';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate: (config: Record<string, any>) => {
+        const validatedConfig = plainToClass(ConfigurationSchema, config, {
+          enableImplicitConversion: true,
+        });
+        const errors = validateSync(validatedConfig, { skipMissingProperties: false });
+        if (errors.length > 0) {
+          throw new Error(`Configuration validation error: ${errors.toString()}`);
+        }
+        return validatedConfig;
+      },
+    }),
     TypeOrmModule.forRoot({
       type: process.env.DB_TYPE as any,
       host: process.env.DB_HOST,
@@ -32,6 +48,7 @@ import { RateLimitingGuard } from './common/guards/rate-limiting.guard';
         ttl: 60 * 1000,
         isGlobal: true,
     }),
+    
   ],
   controllers: [AppController],
   providers: [

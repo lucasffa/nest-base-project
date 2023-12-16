@@ -10,21 +10,21 @@ The "nest-base-project" is a meticulously architected NestJS backend application
 
 2. **Comprehensive User Management**: Facilitates full lifecycle management of user accounts, including creation, retrieval, updating, and deletion.
 
-3. **Secure Authentication and Authorization**: Utilizes JWT for secure user authentication, along with role-based access control for enhanced security.
+3. **Secure Authentication and Authorization**: Utilizes JWT for secure user authentication, along with role-based access control for enhanced security and employs bcrypt for robust password hashing, safeguarding user credentials against potential security threats. This project also is working with CORS, helmet, and CSURF (CSRF).
 
 4. **PostgreSQL Integration**: Leverages PostgreSQL for efficient, relational data management, ensuring data integrity and scalability.
 
-5. **Password Encryption**: Employs bcrypt for robust password hashing, safeguarding user credentials against potential security threats.
+5. **Validation and Error Handling**: Incorporates DTOs and custom decorators, ensuring structured and meaningful error responses and data validation.
 
-6. **Validation and Error Handling**: Incorporates DTOs and custom decorators, ensuring structured and meaningful error responses and data validation.
+6. **Caching Mechanism**: Optimizes data retrieval routes like 'findByUuid' and 'findById' through caching, enhancing performance and reducing database load.
 
-7. **Caching Mechanism**: Optimizes data retrieval routes like 'findByUuid' and 'findById' through caching, enhancing performance and reducing database load.
+7. **Restricted Response Data**: Carefully tailors API responses to exclude sensitive data, utilizing DTOs to ensure data privacy and security.
 
-8. **Restricted Response Data**: Carefully tailors API responses to exclude sensitive data, utilizing DTOs to ensure data privacy and security.
+8. **Validation and Transformation**: Employs 'ValidationPipe' with whitelisting in user update routes, ensuring only permissible fields are accepted, preventing unauthorized updates.
 
-9. **Validation and Transformation**: Employs 'ValidationPipe' with whitelisting in user update routes, ensuring only permissible fields are accepted, preventing unauthorized updates.
+9. **Dynamic Rate Limiting**: Introduces a customizable rate limiting system, allowing fine-grained control over API request frequency to prevent abuse and ensure service availability.
 
-10. **Dynamic Rate Limiting**: Introduces a customizable rate limiting system, allowing fine-grained control over API request frequency to prevent abuse and ensure service availability.
+10. **Environment-Specific Configuration**: Implements `@nestjs/config` for environment variable management and validation.
 
 ## Architecture and Design
 
@@ -38,6 +38,7 @@ src
 │   │   └── rate-limit.decorator.ts
 │   └── guards
 │       └── rate-limiting.guard.ts
+├── config
 ├── auth
 │   ├── decorators
 │   ├── enums
@@ -66,6 +67,7 @@ src
 - **TypeORM**: An ORM for managing database interactions in an object-oriented fashion.
 - **PostgreSQL**: A powerful open-source object-relational database system.
 - **JWT & bcrypt**: For secure authentication and password hashing.
+- **@nestjs/config**: For environment configuration management.
 
 ## Best Practices and Principles
 
@@ -83,13 +85,15 @@ The project is a paragon of:
 
 - **Extensibility and Reusability**: The modular design of rate limiting components, like decorators and guards, ensures easy extensibility and reusability across different parts of the application.
 
+- **Configuration Management**: Uses `@nestjs/config` for secure and validated environment variable management.
+
 ## Getting Started
 
 ### Installation and Setup
 
 1. Clone the repository.
 2. Install dependencies with `npm install`.
-3. Configure PostgreSQL and set environment variables (`JWT_SECRET`, `DB_HOST`, `DB_TYPE`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE`).
+3. Configure PostgreSQL and set environment variables (`JWT_SECRET`, `DB_HOST`, `DB_TYPE`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE`, `PORT`, `CORS_ORIGIN`, `NODE_ENV`, `COOKIE_SECRET`).
 4. Launch the application using `npm run start`.
 
 
@@ -104,7 +108,7 @@ The project is a paragon of:
 ## Documentation and Contributions
 
 - The project is well-documented, with README files in each directory, providing insights into functionalities and architecture.
-- Contributions are welcome, following the standard pull request process.
+- Contributions are welcome via pull requests.
 
 ## License
 
