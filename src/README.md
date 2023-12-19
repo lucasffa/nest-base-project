@@ -20,8 +20,8 @@ The `src` directory of the `nest-base-project` is a meticulously crafted core of
 - Encapsulates the authentication mechanisms, including guards, strategies, decorators, and enums for role and permission management.
 - **`AuthModule`**: Integrates JWT authentication and facilitates role-based and permission-based access control, showcasing advanced security practices.
 
-#### `helpers/`
-- Houses utility classes like `PermissionChecker`, which are pivotal for permission verification and role checks across the application.
+#### `common/`
+- Houses some decorators, guards and some helpers.
 
 #### `user/`
 - Manages user-related operations, including CRUD functionalities, user authentication, and authorization.

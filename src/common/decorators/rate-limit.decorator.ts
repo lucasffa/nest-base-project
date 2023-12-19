@@ -1,4 +1,3 @@
-// rate-limit.decorator.ts
 import { SetMetadata } from '@nestjs/common';
 
 export const RATE_LIMIT_TIME_WINDOW_KEY = 'rateLimitTimeWindow';

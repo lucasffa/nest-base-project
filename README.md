@@ -2,7 +2,7 @@
 
 ## Overview
 
-The "nest-base-project" is a meticulously architected NestJS backend application, embodying advanced features and best practices in modern API development. This project is a showcase of a robust user management system with sophisticated authentication, role-based access control, and comprehensive CRUD operations. 
+The "nest-base-project" is a meticulously architected NestJS backend application, embodying advanced features and best practices in modern API development. This project is a showcase of a robust user management system with sophisticated authentication, role-based access control, and comprehensive CRUD operations. It stands as a model for scalable, secure, and efficient backend application design.
 
 ## Key Features
 
@@ -26,6 +26,8 @@ The "nest-base-project" is a meticulously architected NestJS backend application
 
 10. **Environment-Specific Configuration**: Implements `@nestjs/config` for environment variable management and validation.
 
+11. **Swagger Documentation**: We've implemented dynamic Swagger documentation accessible at the `/docs` endpoint. This documentation is not just comprehensive; it's also built on the principles of DRY (Don't Repeat Yourself). It dynamically generates request and response examples based on the `RouteRequirementDetails` configurations, ensuring that our API documentation is always up-to-date and accurate.
+
 ## Architecture and Design
 
 ### Directory Structure
@@ -37,7 +39,11 @@ src
 │   ├── decorators
 │   │   └── rate-limit.decorator.ts
 │   └── guards
-│       └── rate-limiting.guard.ts
+│   │   └── rate-limiting.guard.ts
+│   └── helpers
+│       └── permission-checker.helper.ts
+│       └── generate-examples.helper.ts
+│       └── generate-properties.helper.ts
 ├── config
 ├── auth
 │   ├── decorators
@@ -45,8 +51,6 @@ src
 │   ├── guards
 │   ├── strategies
 │   └── ...
-├── helpers
-│   └── permission-checker.ts
 ├── user
 │   ├── dto
 │   └── ...
@@ -57,8 +61,6 @@ src
 
 - **Auth**: Central to the application's security, handling authentication, JWT strategies, guards, decorators, and access control mechanisms.
 
-- **Helpers**: Features utility classes like `PermissionChecker` for efficient management of permissions and roles.
-
 - **User**: Manages user-related operations, encapsulating controllers and services for user data handling.
 
 ### Technologies and Frameworks
@@ -68,6 +70,7 @@ src
 - **PostgreSQL**: A powerful open-source object-relational database system.
 - **JWT & bcrypt**: For secure authentication and password hashing.
 - **@nestjs/config**: For environment configuration management.
+- **Swagger**: Facilitates API documentation.
 
 ## Best Practices and Principles
 
@@ -96,19 +99,14 @@ The project is a paragon of:
 3. Configure PostgreSQL and set environment variables (`JWT_SECRET`, `DB_HOST`, `DB_TYPE`, `DB_PORT`, `DB_USERNAME`, `DB_PASSWORD`, `DB_DATABASE`, `PORT`, `CORS_ORIGIN`, `NODE_ENV`, `COOKIE_SECRET`).
 4. Launch the application using `npm run start`.
 
-
-## Testing
-
-- The project still doesn't include thorough unit and integration tests, but aims future ensuring reliability and robustness of services, controllers, and endpoints.
-
 ### Running Tests
 
-- Execute `npm run test` to run the test suite.
+- Currently, the project is in the process of integrating comprehensive unit and integration tests to ensure reliability and robustness across all services and controllers.
 
 ## Documentation and Contributions
 
-- The project is well-documented, with README files in each directory, providing insights into functionalities and architecture.
-- Contributions are welcome via pull requests.
+- Extensive documentation is available, including README files in each directory and dynamic Swagger API documentation.
+- Contributions are welcomed through pull requests.
 
 ## License
 

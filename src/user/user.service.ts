@@ -6,7 +6,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { Role } from '../auth/enums/roles.enum';
-import { PermissionChecker } from '../helpers/permission-checker';
+import { PermissionChecker } from '../common/helpers/permission-checker.helper';
 import { RouteRequirements, RouteRequirementDetails } from '../auth/enums/routes.enum';
 import { Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
@@ -113,7 +113,6 @@ export class UserService {
     }
   }
   
-
   async softDelete(id: number): Promise<void> {
     try {
       await this.usersRepository.update(id, { 
@@ -189,7 +188,7 @@ export class UserService {
   }
 
   async findOneByUuid(uuid: string, requesterUuid, requesterRole): Promise<FindOneByUuidResponseDto> {
-    if (!this.permissionChecker.canPerformAction(requesterUuid, uuid, requesterRole, ...RouteRequirementDetails[RouteRequirements.ChangeActivationStatusByUuid].permissions)) {
+    if (!this.permissionChecker.canPerformAction(requesterUuid, uuid, requesterRole, ...RouteRequirementDetails[RouteRequirements.FindOneByUuid].permissions)) {
       throw new UnauthorizedException('You do not have permission to try to find this user by uuid');
     }
     const cacheKey = `user_${uuid}`;

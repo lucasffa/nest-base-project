@@ -45,13 +45,13 @@ export const RouteRequirementDetails = {
   [RouteRequirements.FindOneByEmail]: {
     roles: [Role.Admin, Role.Mod, Role.Helper],
     permissions: [],
-    guards: [Guards.JwtAuthGuard, Guards.RolesGuard, Guards.RateLimitingGuard],
+    guards: [Guards.JwtAuthGuard, Guards.RateLimitingGuard, Guards.RolesGuard],
     rateLimitTimeWindow: 10,
     rateLimitPoints: 2,
     fields: ['uuid', 'name', 'email', 'isActive', 'isDeleted', 'deletedAt', 'updatedAt'],
   },
   [RouteRequirements.FindOneByUuid]: {
-    roles: [],
+    roles: [Role.User],
     permissions: [Permission.READ_ONE_USER, Permission.READ_OWN_USER],
     guards: [Guards.JwtAuthGuard, Guards.PermissionsGuard, Guards.RateLimitingGuard],
     rateLimitTimeWindow: 10,
@@ -75,9 +75,9 @@ export const RouteRequirementDetails = {
     fields: ['uuid', 'name', 'email', 'createdAt', 'role'],
   },
   [RouteRequirements.UpdateUser]: {
-    roles: [],
-    permissions: [Permission.UPDATE_OWN_USER, Permission.UPDATE_ONE_USER],
-    guards: [Guards.JwtAuthGuard, Guards.PermissionsGuard, Guards.RateLimitingGuard],
+    roles: [Role.Admin, Role.Mod],
+    permissions: [Permission.UPDATE_ONE_USER],
+    guards: [Guards.JwtAuthGuard, Guards.RolesGuard, Guards.RateLimitingGuard],
     rateLimitTimeWindow: 10,
     rateLimitPoints: 2,
     fields: ['uuid', 'name', 'email', 'isActive'],
@@ -85,7 +85,7 @@ export const RouteRequirementDetails = {
   [RouteRequirements.UpdateByUuid]: {
     roles: [],
     permissions: [Permission.UPDATE_OWN_USER, Permission.UPDATE_ONE_USER],
-    guards: [Guards.JwtAuthGuard, Guards.RolesGuard, Guards.RateLimitingGuard],
+    guards: [Guards.JwtAuthGuard, Guards.PermissionsGuard, Guards.RateLimitingGuard],
     rateLimitTimeWindow: 10,
     rateLimitPoints: 2,
     fields: ['uuid', 'name', 'email', 'isActive'],
