@@ -72,3 +72,9 @@ export class UpdateByUuidResponseDto extends BaseUserResponseDto {
     super(user, RouteRequirementDetails[RouteRequirements.UpdateByUuid].fields);
   }
 }
+
+export class LoginResponseDto {
+  message: string;
+  user: LoginUserResponseDto; // Assuming UserDto is already defined to represent user details
+  token: string;
+}

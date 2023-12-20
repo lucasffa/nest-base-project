@@ -18,6 +18,15 @@ async function bootstrap() {
     .setDescription('This API\'s description')
     .setVersion('1.0')
     .addTag('DOCS')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        in: 'header',
+      },
+      'BearerAuth', // Name of the security scheme (can be any name)
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

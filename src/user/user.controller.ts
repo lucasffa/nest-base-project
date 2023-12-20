@@ -8,13 +8,14 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Permissions } from '../auth/decorators/permissions.decorator';
 import { RouteRequirements, RouteRequirementDetails } from '../auth/enums/routes.enum';
-import { UpdateByUuidResponseDto, ChangeActivationStatusByUuidResponseDto, ReadAllUsersResponseDto, FindOneByEmailResponseDto, FindOneByUuidResponseDto, FindOneResponseDto, CreateUserResponseDto, UpdateUserResponseDto, ActivateUserResponseDto} from './dto/other-user-responses.dto';
+import { UpdateByUuidResponseDto, LoginResponseDto, ChangeActivationStatusByUuidResponseDto, ReadAllUsersResponseDto, FindOneByEmailResponseDto, FindOneByUuidResponseDto, FindOneResponseDto, CreateUserResponseDto, UpdateUserResponseDto, ActivateUserResponseDto} from './dto/other-user-responses.dto';
 import { RateLimit } from '../common/decorators/rate-limit.decorator';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { generateProperties } from '../common/helpers/generate-properties.helper';
 import { generateExample, generateExampleDto } from 'src/common/helpers/generate-examples.helper';
 
 @ApiTags('users')
+@ApiBearerAuth('BearerAuth')
 @Controller('users')
 export class UserController {
   constructor(
@@ -23,7 +24,6 @@ export class UserController {
     ) {}
 
   @Get()
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all users', description: 'Fetches a list of all registered users' })
   @ApiResponse({ 
     status: 200, 
@@ -45,7 +45,6 @@ export class UserController {
   }
 
   @Get('email')
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get user by email', description: 'Fetches a user by email' })
   @ApiQuery({ name: 'email', description: 'User found by email', type: String, required: true, example: generateExample(['email']).email })
   @ApiResponse({ status: 200, description: 'User found by email',
@@ -66,7 +65,6 @@ export class UserController {
   }
 
   @Get('uuid')
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get user by uuid', description: 'Fetches a user by uuid' })
   @ApiQuery({ name: 'uuid', description: 'User found by uuid', type: String, required: true, example: generateExample(['uuid']).uuid })
   @ApiResponse({ status: 200, description: 'User found by uuid',
@@ -87,7 +85,6 @@ export class UserController {
   }
 
   @Get(':id')
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get user by id', description: 'Fetches a user by id' })
   @ApiParam({ name: 'id', description: 'User found by id', type: Number, required: true, example: generateExample(['id']).id })
   @ApiResponse({ status: 200, description: 'User found by id',
@@ -108,7 +105,6 @@ export class UserController {
   }
 
   @Post()
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Create user', description: 'Creates a new user' })
   @ApiBody({ type: CreateUserDto, description: 'User created', required: true })
   @ApiResponse({ status: 201, description: 'User created',
@@ -129,7 +125,6 @@ export class UserController {
   }
 
   @Put('uuid')
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Update user by uuid', description: 'Updates a user by uuid' })
   @ApiQuery({ name: 'uuid', description: 'User updated by uuid', type: String, required: true, example: generateExample(['uuid']).uuid })
   @ApiBody({ type: UpdateUserDto, description: 'User updated', required: true })
@@ -153,7 +148,6 @@ export class UserController {
   }
 
   @Put(':id')
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Update user by id', description: 'Updates a user by id' })
   @ApiParam({ name: 'id', description: 'User updated by id', type: Number, required: true, example: generateExample(['id']).id })
   @ApiBody({ type: UpdateUserDto, description: 'User updated', required: true })
@@ -176,7 +170,6 @@ export class UserController {
   }
 
   @Delete('delete')
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete user by uuid', description: 'Deletes a user by uuid' })
   @ApiQuery({ name: 'uuid', description: 'User deleted by uuid', type: String, required: true, example: generateExample(['uuid']).uuid })
   @ApiResponse({ status: 200, description: 'User deleted by uuid',
@@ -198,7 +191,6 @@ export class UserController {
   }
 
   @Patch('activate')
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Activate user by uuid', description: 'Activates a user by uuid' })
   @ApiQuery({ name: 'uuid', description: 'User activated by uuid', type: String, required: true, example: generateExample(['uuid']).uuid })
   @ApiResponse({ status: 200, description: 'User activated by uuid',
@@ -220,7 +212,6 @@ export class UserController {
   }
 
   @Delete(':id/delete')
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete user by id', description: 'Deletes a user by id' })
   @ApiParam({ name: 'id', description: 'User deleted by id', required: true, type: Number, example: generateExample(['id']).id })
   @ApiResponse({ status: 200, description: 'User deleted by id',
@@ -241,7 +232,6 @@ export class UserController {
   }
 
   @Patch(':id/activate')
-  @ApiBearerAuth()
   @ApiOperation({ summary: 'Activate user by id', description: 'Activates a user by id' })
   @ApiParam({ name: 'id', description: 'User activated by id', type: Number, required: true, example: generateExample(['id']).id })
   @ApiResponse({ status: 200, description: 'User activated by id',
@@ -264,17 +254,30 @@ export class UserController {
   @Post('login')
   @ApiOperation({ summary: 'Login user', description: 'Logs in a user' })
   @ApiBody({ type: LoginDto, description: 'User logged in', required: true })
-  @ApiResponse({ status: 200, description: 'User logged in',
+  @ApiResponse({ 
+    status: 200, 
+    description: 'User logged in',
     schema: { 
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: generateProperties(RouteRequirementDetails[RouteRequirements.LoginUser].fields),
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'Login successful',
+        },
+        user: {
+          type: 'object',
+          properties: generateProperties(RouteRequirementDetails[RouteRequirements.LoginUser].fields),
+        },
+        token: {
+          type: 'string',
+          example: 'ey...',
+        },
       },
-    }
-  })
+    },
+  })  
   @RateLimit(RouteRequirementDetails[RouteRequirements.LoginUser].rateLimitTimeWindow, RouteRequirementDetails[RouteRequirements.LoginUser].rateLimitPoints)
-  async login(@Body() loginDto: LoginDto): Promise<any> {
+  async login(@Body() loginDto: LoginDto): Promise<LoginResponseDto> {
+    console.log('Accessed login route')
     const user = await this.userService.validateUser(loginDto.email, loginDto.password);
     if (!user) {
       throw new UnauthorizedException();
