@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Put, Delete, Patch, Body, Param, Query, UseGuards, Req, ValidationPipe, UsePipes } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Patch, Body, Param, Query, UseGuards, Req, ValidationPipe, UsePipes, UnauthorizedException, HttpCode } from '@nestjs/common';
 import { UserService } from './user.service';
-import { UnauthorizedException } from '@nestjs/common';
+import { LogService } from '../log/log.service';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -12,7 +12,8 @@ import { UpdateByUuidResponseDto, LoginResponseDto, ChangeActivationStatusByUuid
 import { RateLimit } from '../common/decorators/rate-limit.decorator';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { generateProperties } from '../common/helpers/generate-properties.helper';
-import { generateExample, generateExampleDto } from 'src/common/helpers/generate-examples.helper';
+import { generateExample } from 'src/common/helpers/generate-examples.helper';
+import { User } from './user.entity';
 
 @ApiTags('users')
 @ApiBearerAuth('BearerAuth')
@@ -21,6 +22,7 @@ export class UserController {
   constructor(
     private readonly userService: UserService,
     private jwtService: JwtService,
+    private readonly logService: LogService,
     ) {}
 
   @Get()
@@ -40,7 +42,9 @@ export class UserController {
   @UseGuards(...RouteRequirementDetails[RouteRequirements.ReadAllUsers].guards)
   @Roles(...RouteRequirementDetails[RouteRequirements.ReadAllUsers].roles)
   @Permissions(...RouteRequirementDetails[RouteRequirements.ReadAllUsers].permissions)
-  findAll(): Promise<ReadAllUsersResponseDto[]> {
+  findAll(@Req() req): Promise<ReadAllUsersResponseDto[]> {
+    const userReq = req.user;
+    this.logService.log('Fetching all users', 'UserController', {uuidReq: userReq?.uuid});
     return this.userService.findAll();
   }
 
@@ -60,7 +64,9 @@ export class UserController {
   @UseGuards(...RouteRequirementDetails[RouteRequirements.FindOneByEmail].guards)
   @Roles(...RouteRequirementDetails[RouteRequirements.FindOneByEmail].roles)
   @Permissions(...RouteRequirementDetails[RouteRequirements.FindOneByEmail].permissions)
-  findOneByEmail(@Query('email') email: string): Promise<FindOneByEmailResponseDto> {
+  findOneByEmail(@Req() req, @Query('email') email: string): Promise<FindOneByEmailResponseDto> {
+    const userReq = req.user;
+    this.logService.log('Fetching user by email', 'UserController', {emailQuery: email, uuidReq: userReq?.uuid});
     return this.userService.findOneByEmail(email);
   }
 
@@ -80,8 +86,9 @@ export class UserController {
   @UseGuards(...RouteRequirementDetails[RouteRequirements.FindOneByUuid].guards)
   @Permissions(...RouteRequirementDetails[RouteRequirements.FindOneByUuid].permissions)
   findOneByUuid(@Query('uuid') uuid: string, @Req() req): Promise<FindOneByUuidResponseDto> {
-    const userRequesting = req.user;
-    return this.userService.findOneByUuid(uuid, userRequesting.uuid, userRequesting.role);
+    const userReq = req.user;
+    this.logService.log('Fetching user by uuid', 'UserController', {uuidQuery: uuid, uuidReq: userReq?.uuid});
+    return this.userService.findOneByUuid(uuid, userReq.uuid, userReq.role);
   }
 
   @Get(':id')
@@ -100,7 +107,9 @@ export class UserController {
   @UseGuards(...RouteRequirementDetails[RouteRequirements.FindOne].guards)
   @Roles(...RouteRequirementDetails[RouteRequirements.FindOne].roles)
   @Permissions(...RouteRequirementDetails[RouteRequirements.FindOne].permissions)
-  findOne(@Param('id') id: number): Promise<FindOneResponseDto> {
+  findOne(@Param('id') id: number, @Req() req): Promise<FindOneResponseDto> {
+    const userReq = req.user;
+    this.logService.log('Fetching user by id', 'UserController', {idQuery: id, uuidReq: userReq?.uuid});
     return this.userService.findOne(id);
   }
 
@@ -121,6 +130,7 @@ export class UserController {
   @Roles(...RouteRequirementDetails[RouteRequirements.CreateUser].roles)
   @Permissions(...RouteRequirementDetails[RouteRequirements.CreateUser].permissions)
   create(@Body() createUserDto: CreateUserDto): Promise<CreateUserResponseDto> {
+    this.logService.log('Creating user', 'UserController', {email: createUserDto.email});
     return this.userService.create(createUserDto);
   }
 
@@ -143,8 +153,9 @@ export class UserController {
   @Permissions(...RouteRequirementDetails[RouteRequirements.UpdateByUuid].permissions)
   @UsePipes(new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }))
   updateByUuid(@Query('uuid') uuid: string, @Body() updateUserDto: UpdateUserDto, @Req() req): Promise<UpdateByUuidResponseDto> {
-    const userRequesting = req.user;
-    return this.userService.updateByUuid(uuid, updateUserDto, userRequesting.uuid, userRequesting.role);
+    const userReq = req.user;
+    this.logService.log('Updating user by uuid', 'UserController', {uuidQuery: uuid, uuidReq: userReq?.uuid});
+    return this.userService.updateByUuid(uuid, updateUserDto, userReq.uuid, userReq.role);
   }
 
   @Put(':id')
@@ -165,7 +176,9 @@ export class UserController {
   @Roles(...RouteRequirementDetails[RouteRequirements.UpdateUser].roles)
   @Permissions(...RouteRequirementDetails[RouteRequirements.UpdateUser].permissions)
   @UsePipes(new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }))
-  update(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto): Promise<UpdateUserResponseDto> {
+  update(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto, @Req() req): Promise<UpdateUserResponseDto> {
+    const userReq = req.user;
+    this.logService.log('Updating user by id', 'UserController', {idQuery: id, uuidReq: userReq?.uuid});
     return this.userService.update(id, updateUserDto);
   }
 
@@ -186,8 +199,9 @@ export class UserController {
   @Roles(...RouteRequirementDetails[RouteRequirements.SoftDeleteByUuid].roles)
   @Permissions(...RouteRequirementDetails[RouteRequirements.SoftDeleteByUuid].permissions)
   softDeleteByUuid(@Query('uuid') uuid: string, @Req() req): Promise<void> {
-    const userRequesting = req.user;
-    return this.userService.softDeleteByUuid(uuid, userRequesting.uuid, userRequesting.role);
+    const userReq = req.user;
+    this.logService.log('Soft deleting user by uuid', 'UserController', {uuidQuery: uuid, uuidReq: userReq?.uuid});
+    return this.userService.softDeleteByUuid(uuid, userReq.uuid, userReq.role);
   }
 
   @Patch('activate')
@@ -207,8 +221,9 @@ export class UserController {
   @Roles(...RouteRequirementDetails[RouteRequirements.ChangeActivationStatusByUuid].roles)
   @Permissions(...RouteRequirementDetails[RouteRequirements.ChangeActivationStatusByUuid].permissions)
   changeActivationStatusByUuid(@Query('uuid') uuid: string, @Req() req): Promise<ChangeActivationStatusByUuidResponseDto> {
-    const userRequesting = req.user; 
-    return this.userService.changeActivationStatusByUuid(uuid, userRequesting.uuid, userRequesting.role);
+    const userReq = req.user; 
+    this.logService.log('Changing activation status by uuid', 'UserController', {uuidQuery: uuid, uuidReq: userReq?.uuid});
+    return this.userService.changeActivationStatusByUuid(uuid, userReq.uuid, userReq.role);
   }
 
   @Delete(':id/delete')
@@ -227,7 +242,9 @@ export class UserController {
   @UseGuards(...RouteRequirementDetails[RouteRequirements.SoftDelete].guards)
   @Roles(...RouteRequirementDetails[RouteRequirements.SoftDelete].roles)
   @Permissions(...RouteRequirementDetails[RouteRequirements.SoftDelete].permissions)
-  softDelete(@Param('id') id: number): Promise<void> {
+  softDelete(@Param('id') id: number, @Req() req): Promise<void> {
+    const userReq = req.user;
+    this.logService.log('Soft deleting user by id', 'UserController', {idQuery: id, uuidReq: userReq?.uuid});
     return this.userService.softDelete(id);
   }
 
@@ -247,11 +264,14 @@ export class UserController {
   @UseGuards(...RouteRequirementDetails[RouteRequirements.ActivateUser].guards)
   @Roles(...RouteRequirementDetails[RouteRequirements.ActivateUser].roles)
   @Permissions(...RouteRequirementDetails[RouteRequirements.ActivateUser].permissions)
-  changeActivationStatus(@Param('id') id: number): Promise<ActivateUserResponseDto> {
+  changeActivationStatus(@Param('id') id: number, @Req() req): Promise<ActivateUserResponseDto> {
+    const userReq = req.user;
+    this.logService.log('Changing activation status by id', 'UserController', {idQuery: id, uuidReq: userReq?.uuid});
     return this.userService.changeActivationStatus(id);
   }
 
   @Post('login')
+  @HttpCode(200)
   @ApiOperation({ summary: 'Login user', description: 'Logs in a user' })
   @ApiBody({ type: LoginDto, description: 'User logged in', required: true })
   @ApiResponse({ 
@@ -277,11 +297,12 @@ export class UserController {
   })  
   @RateLimit(RouteRequirementDetails[RouteRequirements.LoginUser].rateLimitTimeWindow, RouteRequirementDetails[RouteRequirements.LoginUser].rateLimitPoints)
   async login(@Body() loginDto: LoginDto): Promise<LoginResponseDto> {
-    console.log('Accessed login route')
+    this.logService.log('Login attempt', 'UserController', { email: loginDto.email });
     const user = await this.userService.validateUser(loginDto.email, loginDto.password);
     if (!user) {
       throw new UnauthorizedException();
     }
+    this.logService.log('Login successful', 'UserController', { email: user.email, uuid: user.uuid });
 
     const payload = { email: user.email, sub: user.uuid, role: user.role };
     const token = this.jwtService.sign(payload, { secret: process.env.JWT_SECRET });

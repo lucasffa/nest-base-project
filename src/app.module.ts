@@ -8,11 +8,13 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from './auth/auth.module';
 import { PermissionsGuard } from './auth/guards/permissions.guard';
 import { RateLimitingGuard } from './common/guards/rate-limiting.guard';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { validateSync } from 'class-validator';
 import { plainToClass } from 'class-transformer';
 import { ConfigurationSchema } from './config/configuration.schema';
-
+import { LogService } from './log/log.service';
+import { MongooseModule } from './db/mongoose/mongoose.module';
+import { LogModule } from './log/log.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -28,6 +30,7 @@ import { ConfigurationSchema } from './config/configuration.schema';
         return validatedConfig;
       },
     }),
+    MongooseModule,
     TypeOrmModule.forRoot({
       type: process.env.DB_TYPE as any,
       host: process.env.DB_HOST,
@@ -48,6 +51,7 @@ import { ConfigurationSchema } from './config/configuration.schema';
         ttl: 60 * 1000,
         isGlobal: true,
     }),
+    LogModule,
     
   ],
   controllers: [AppController],
@@ -57,7 +61,8 @@ import { ConfigurationSchema } from './config/configuration.schema';
     {
       provide: 'APP_GUARD',
       useClass: RateLimitingGuard,
-    }
+    },
+    LogService,
   ],
 })
 export class AppModule {}

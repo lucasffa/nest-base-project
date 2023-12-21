@@ -37,4 +37,7 @@ export class ConfigurationSchema {
 
   @IsString()
   COOKIE_SECRET: string;
+
+  @IsString()
+  MONGO_URI: string;
 }

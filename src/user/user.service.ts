@@ -1,6 +1,6 @@
 import { Injectable, ConflictException, InternalServerErrorException, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { User } from './user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -12,6 +12,7 @@ import { Inject } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 import { UpdateByUuidResponseDto, LoginUserResponseDto, SoftDeleteByUuidResponseDto, ChangeActivationStatusByUuidResponseDto, ReadAllUsersResponseDto, FindOneByEmailResponseDto, FindOneByUuidResponseDto, FindOneResponseDto, CreateUserResponseDto, UpdateUserResponseDto, SoftDeleteResponseDto, ActivateUserResponseDto} from './dto/other-user-responses.dto';
+import { LogService } from '../log/log.service';
 
 @Injectable()
 export class UserService {
@@ -19,6 +20,7 @@ export class UserService {
     @InjectRepository(User) private usersRepository: Repository<User>,
     private permissionChecker: PermissionChecker,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly logService: LogService,
   ) {}
 
   async findAll(): Promise<ReadAllUsersResponseDto[]> {
@@ -36,6 +38,7 @@ export class UserService {
       await this.cacheManager.set(cacheKey, users);
       return users.map(user => new ReadAllUsersResponseDto(user));
     } catch (error) {
+      this.logService.error('Error fetching users from database', error, 'UserService.findAll');
       throw new InternalServerErrorException('Error fetching users from database');
     }
   }
@@ -54,7 +57,8 @@ export class UserService {
       await this.cacheManager.set(cacheKey, user);
       return new FindOneResponseDto(user);
     } catch (error) {
-      throw error;
+      this.logService.error('Error finding user', error, 'UserService.findOne');
+      throw new NotFoundException('User not found.');
     }
   }
   
@@ -73,9 +77,11 @@ export class UserService {
       return new CreateUserResponseDto(savedUser);
     } catch (error) {
       if (error.code === '23505') {
-        throw new ConflictException('This email is already in use.');
+        this.logService.error('Error creating user', 'Email is already in use', 'UserService.create');
+        throw new ConflictException('Email is already in use');
       } else {
-        throw new InternalServerErrorException();
+        this.logService.error('Error creating user', error, 'UserService.create');
+        throw new InternalServerErrorException('Error creating user');
       }
     }
   }
@@ -89,11 +95,12 @@ export class UserService {
       await this.usersRepository.update({ uuid }, userUpdateData);
       const updatedUser = await this.usersRepository.findOne({ where: { uuid } });
       if (!updatedUser) {
-        throw new NotFoundException(`User with UUID ${uuid} not found`);
+        throw new NotFoundException(`User not found.`);
       }
       await this.cacheManager.del(`user_${uuid}`);
       return new UpdateByUuidResponseDto(updatedUser);
     } catch (error) {
+      this.logService.error('Error updating user with uuid', error, 'UserService.updateByUuid');
       throw new NotFoundException('User not found.');
     }
   }
@@ -109,19 +116,24 @@ export class UserService {
       await this.cacheManager.del(`user_${id}`);
       return new UpdateUserResponseDto(updatedUser);
     } catch (error) {
+      this.logService.error('Error updating user with id', error, 'UserService.update');
       throw new NotFoundException('User not found.');
     }
   }
   
   async softDelete(id: number): Promise<void> {
     try {
-      await this.usersRepository.update(id, { 
+      const result = await this.usersRepository.update(id, { 
         isActive: false,
         isDeleted: true, 
         deletedAt: new Date() 
       });
+      if(result.affected === 0){
+        throw new NotFoundException('User not found.');
+      }
       await this.cacheManager.del(`user_${id}`);
     } catch (error) {
+      this.logService.error('Error soft deleting user with id', error, 'UserService.softDelete');
       throw new NotFoundException('User not found.');
     }
   }  
@@ -141,6 +153,7 @@ export class UserService {
       await this.cacheManager.del(`user_${id}`);
       return new ActivateUserResponseDto(userData);
     } catch (error) {
+      this.logService.error('Error changing activation status of user with id', error, 'UserService.changeActivationStatus');
       throw new NotFoundException('User not found.');
     }
   }
@@ -156,10 +169,11 @@ export class UserService {
         deletedAt: new Date(),
       });
       if (result.affected === 0) {
-        throw new NotFoundException(`User with UUID ${uuid} not found`);
+        throw new NotFoundException('User not found.');
       }
       await this.cacheManager.del(`user_${uuid}`);
     } catch (error) {
+      this.logService.error('Error soft deleting user with uuid', error, 'UserService.softDeleteByUuid');
       throw new NotFoundException('User not found.');
     }
   }
@@ -171,7 +185,7 @@ export class UserService {
     try {
       const userData = await this.usersRepository.findOne({ where: { uuid } });
       if (!userData) {
-        throw new NotFoundException(`User with UUID ${uuid} not found`);
+        throw new NotFoundException('User not found.');
       }
       userData.isActive = !userData.isActive;
       if (userData.isActive && userData.isDeleted) {
@@ -183,6 +197,7 @@ export class UserService {
       await this.cacheManager.del(`user_${uuid}`);
       return new ChangeActivationStatusByUuidResponseDto(userData);
     } catch (error) {
+      this.logService.error('Error changing activation status of user with uuid', error, 'UserService.changeActivationStatusByUuid');
       throw new NotFoundException('User not found.');
     }
   }
@@ -204,16 +219,21 @@ export class UserService {
       await this.cacheManager.set(cacheKey, user);
       return new FindOneByUuidResponseDto(user);
     } catch (error) {
-      throw error;
+      this.logService.error('Error finding user with uuid', error, 'UserService.findOneByUuid');
+      throw new NotFoundException('User not found.');
     }
   }
   
   async findOneByEmail(email: string): Promise<FindOneByEmailResponseDto> {
     try{    
       const user = await this.usersRepository.findOne({where: {email, isDeleted: false, isActive: true}});
+      if (!user) {
+        throw new NotFoundException('User not found.');
+      }
       return new FindOneByEmailResponseDto(user);
     }catch(error){
-      throw new NotFoundException('User not found.');
+      this.logService.error('Error finding user with email', error, 'UserService.findOneByEmail');
+      throw new NotFoundException('User not found.')
     }
   }
 
@@ -222,6 +242,7 @@ export class UserService {
       const user = await this.usersRepository.findOne({where: {email, isDeleted: false, isActive: true}});
       return user;
     }catch(error){
+      this.logService.error('Error finding user with email privately', error, 'UserService.findOneByEmailPrivately');
       throw new NotFoundException('User not found.');
     }
   }
@@ -234,6 +255,7 @@ export class UserService {
       user.lastLoginAt = lastLoginAt;
       return new LoginUserResponseDto(user);
     }
+    this.logService.error('Error validating user', 'Invalid credentials', 'UserService.validateUser');
     throw new UnauthorizedException('Invalid credentials');
   }
 }
