@@ -28,6 +28,10 @@ The "nest-base-project" is a meticulously architected NestJS backend application
 
 11. **Swagger Documentation**: We've implemented dynamic Swagger documentation accessible at the `/docs` endpoint. This documentation is not just comprehensive; it's also built on the principles of DRY (Don't Repeat Yourself). It dynamically generates request and response examples based on the `RouteRequirementDetails` configurations, ensuring that our API documentation is always up-to-date and accurate.
 
+12. **MongoDB Integration**: Utilizes MongoDB for flexible data storage, ensuring scalability and data integrity.
+
+13. **Sophisticated Logging Mechanism**: Features an advanced logging system that records application activities and errors, storing them in MongoDB via Mongoose for easy monitoring and analysis.
+
 ## Architecture and Design
 
 ### Directory Structure
@@ -46,7 +50,12 @@ src
 │       └── generate-properties.helper.ts
 ├── config
 ├── db
+│   └── mongoose
 ├── log
+│   ├── log.model.ts
+│   ├── log.service.ts
+│   └── log.module.ts
+│   └── log.interface.ts
 ├── auth
 │   ├── decorators
 │   ├── enums
@@ -70,9 +79,11 @@ src
 - **NestJS**: A progressive framework for building scalable server-side applications.
 - **TypeORM**: An ORM for managing database interactions in an object-oriented fashion.
 - **PostgreSQL**: A powerful open-source object-relational database system.
+- **Mongoose**: A MongoDB Object Data Modeling (ODM) library, enabling the creation and manipulation of MongoDB-based data structures.
 - **JWT & bcrypt**: For secure authentication and password hashing.
 - **@nestjs/config**: For environment configuration management.
 - **Swagger**: Facilitates API documentation.
+- **MongoDB**: A NoSQL database system that stores data in flexible, JSON-like documents.
 
 ## Best Practices and Principles
 
