@@ -124,4 +124,4 @@ The project is a paragon of:
 ## License
 
 - This project is under the [MIT License](LICENSE).
-- NestJS is [MIT licensed](LICENSE).
+- NestJS is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
