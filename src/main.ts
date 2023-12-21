@@ -8,10 +8,12 @@ import { ValidationPipe } from '@nestjs/common';
 //import * as csurf from 'csurf';
 const helmet = require('helmet');
 import { ConfigService } from '@nestjs/config';
+import { LogService } from './log/log.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+  const logService = app.get(LogService);
 
   const config = new DocumentBuilder()
     .setTitle('nest-base-project')
@@ -57,7 +59,6 @@ async function bootstrap() {
   const port = configService.get<number>('PORT', 3000);
 
   await app.listen(port, '0.0.0.0');
-
-  console.log(`Application is running on: ${await app.getUrl()}`);
+  logService.log(`\n Application is running! \n The URL is: ${await app.getUrl()} \n\n`, 'main.ts');
 }
 bootstrap();
